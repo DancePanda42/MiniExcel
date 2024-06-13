@@ -874,5 +874,36 @@ namespace MiniExcelTests
                 Assert.Equal("A5:A6", mergedCells[2]);
             }
         }
+
+        [Fact]
+        public void TestTemplateDateTimeFormat()
+        {
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateDateTimeFormat.xlsx");
+            var targetPath = PathHelper.GetTempFilePath();
+            var dateTime = new DateTime(2024, 02, 10, 10, 35, 59);
+
+            var value = new
+            {
+                data = Enumerable.Range(0, 10).Select(i => new {
+                    name = $"Git_{i}",
+                    url = $"https://github.com/{i}",
+                    modified = dateTime.AddDays(i),
+                    created = dateTime.AddHours(i),
+                    count = i
+                }).ToArray(),
+            };
+
+            MiniExcel.SaveAsByTemplate(targetPath, templatePath, value);
+
+            var data = MiniExcel.Query(targetPath, useHeaderRow:true).ToArray();
+            for (int i = 0; i < data.Length; i++)
+            {
+                Assert.Equal($"Git_{i}", data[i].Name);
+                Assert.Equal($"https://github.com/{i}", data[i].Url);
+                Assert.Equal(dateTime.AddDays(i), data[i].Modified);
+                Assert.Equal(dateTime.AddHours(i), data[i].Created);
+                Assert.Equal(i, data[i].Count);
+            }
+        }
     }
 }
